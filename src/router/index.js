@@ -3,8 +3,8 @@ import EnvelopePage from '../views/EnvelopePage.vue'
 import EditPage from '../views/EditPage.vue'
 
 const routes = [
-  { path: '/', component: EnvelopePage },
-  { path: '/edit', component: EditPage }
+  { path: '/:code', component: EnvelopePage },
+  { path: '/:code/edit', component: EditPage }
 ]
 
 export default createRouter({

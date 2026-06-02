@@ -1,29 +1,25 @@
 <template>
   <div class="page">
     <h1 class="title">Message</h1>
-
-    <div class="envelope" @click="toggleOpen" :class="{ open: isOpen }">
-
+    <div v-if="loading" style="margin-top: 40px">Wird geladen...</div>
+    <div v-else-if="notFound" style="margin-top: 40px; color: #888">Kein Eintrag gefunden.</div>
+    <div v-else class="envelope" @click="toggleOpen" :class="{ open: isOpen }">
       <div class="base"></div>
-
       <div class="letter" v-if="isOpen">
         <p class="message-text">{{ message }}</p>
       </div>
-
       <div class="photos" v-if="isOpen">
-        <div 
-          v-for="(photo, index) in finalPhotos" 
-          :key="index" 
+        <div
+          v-for="(photo, index) in finalPhotos"
+          :key="index"
           class="photo"
           :style="{ animationDelay: (0.2 + index * 0.2) + 's' }"
         >
           <img :src="photo" />
         </div>
       </div>
-
       <div class="front"></div>
       <div class="flap"></div>
-
     </div>
   </div>
 </template>
@@ -35,19 +31,24 @@ export default {
   data() {
     return {
       isOpen: false,
-      message: 'Ich denke an dich 💖',
+      loading: true,
+      notFound: false,
+      message: '',
       photos: []
     }
   },
 
   async created() {
     const code = this.$route.params.code
-    if (!code) return
-
-    const data = await getKeychain(code)
-    if (data) {
-      this.message = data.message || this.message
+    try {
+      const data = await getKeychain(code)
+      if (!data) { this.notFound = true; return }
+      this.message = data.message || ''
       this.photos = [data.image1, data.image2, data.image3].filter(Boolean)
+    } catch {
+      this.notFound = true
+    } finally {
+      this.loading = false
     }
   },
 
