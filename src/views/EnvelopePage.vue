@@ -21,7 +21,9 @@
           class="photo"
           :style="{ animationDelay: (0.2 + index * 0.2) + 's' }"
         >
-          <img :src="photo" />
+          <div class="photo-inner" @click.stop="toggleEnlarge(index)">
+            <img :src="photo" />
+          </div>
         </div>
       </div>
 
@@ -29,6 +31,20 @@
       <div class="flap"></div>
 
     </div>
+
+    <teleport to="body">
+      <transition name="fade">
+        <div
+          v-if="enlargedIndex !== null"
+          class="lightbox-backdrop"
+          @click="closeEnlarge"
+        >
+          <div class="lightbox-card" @click.stop>
+            <img :src="photos[enlargedIndex]" />
+          </div>
+        </div>
+      </transition>
+    </teleport>
   </div>
 </template>
 
@@ -42,7 +58,8 @@ export default {
       message: '',
       photos: [],
       photosOffset: 0,
-      resizeObserver: null
+      resizeObserver: null,
+      enlargedIndex: null
     }
   },
 
@@ -65,14 +82,23 @@ export default {
     isOpen(newVal) {
       if (newVal) {
         this.$nextTick(() => this.observeLetter())
-      } else if (this.resizeObserver) {
-        this.resizeObserver.disconnect()
+      } else {
+        if (this.resizeObserver) this.resizeObserver.disconnect()
+        this.enlargedIndex = null
       }
     }
   },
 
   methods: {
     toggleOpen() { this.isOpen = !this.isOpen },
+
+    toggleEnlarge(index) {
+      this.enlargedIndex = this.enlargedIndex === index ? null : index
+    },
+
+    closeEnlarge() {
+      this.enlargedIndex = null
+    },
 
     observeLetter() {
       const el = this.$refs.letterEl
@@ -199,12 +225,30 @@ export default {
   position: absolute;
   width: 90px;
   height: 110px;
-  background: white;
-  padding: 6px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-  border-radius: 4px;
   opacity: 0;
   transform: translateY(40px) scale(0.8);
+  pointer-events: auto;
+}
+
+.photo-inner {
+  width: 100%;
+  height: 100%;
+  background: white;
+  padding: 6px;
+  box-sizing: border-box;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  border-radius: 4px;
+  cursor: pointer;
+  transform-origin: center center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Kleines Hover-Feedback am Desktop, die eigentliche Vergrösserung passiert in der Lightbox */
+@media (hover: hover) {
+  .photo-inner:hover {
+    transform: scale(1.05);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.3);
+  }
 }
 
 /* Bild drin */
@@ -297,5 +341,57 @@ export default {
     left: 65%;
     top: 110%;
   }
+}
+
+/* Lightbox */
+.lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.lightbox-card {
+  background: white;
+  padding: 14px 14px 22px;
+  border-radius: 6px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  max-width: min(90vw, 420px);
+  width: 100%;
+  animation: popIn 0.25s ease;
+}
+
+.lightbox-card img {
+  display: block;
+  width: 100%;
+  max-height: 75vh;
+  object-fit: contain;
+  border-radius: 3px;
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>
