@@ -8,6 +8,6 @@ const routes = [
 ]
 
 export default createRouter({
-  history: createWebHashHistory('/KeyMessage/'),
+  history: createWebHashHistory('/Keyfinity/'),
   routes
 })
