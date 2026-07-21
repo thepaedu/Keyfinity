@@ -8,9 +8,9 @@
       <div class="letter" v-if="isOpen">
         <p class="message-text">{{ message }}</p>
       </div>
-      <div class="photos" v-if="isOpen">
+      <div class="photos" v-if="isOpen && photos.length">
         <div
-          v-for="(photo, index) in finalPhotos"
+          v-for="(photo, index) in photos"
           :key="index"
           class="photo"
           :style="{ animationDelay: (0.2 + index * 0.2) + 's' }"
@@ -55,17 +55,6 @@ export default {
   methods: {
     toggleOpen() { this.isOpen = !this.isOpen }
   },
-
-  computed: {
-    finalPhotos() {
-      if (this.photos.length > 0) return this.photos
-      return [
-        'https://picsum.photos/100?1',
-        'https://picsum.photos/100?2',
-        'https://picsum.photos/100?3'
-      ]
-    }
-  }
 }
 </script>
 

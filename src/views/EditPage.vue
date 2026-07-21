@@ -15,7 +15,9 @@
     <div v-if="images.length" class="preview">
       <div v-for="(img, index) in images" :key="index" class="preview-img">
         <img :src="img" />
-        <button class="delete-btn" @click="removeImage(index)">❌</button>
+        <button class="delete-btn" @click="removeImage(index)">
+          <img :src="deleteIcon" alt="Löschen" />
+        </button>
       </div>
     </div>
   </div>
@@ -33,6 +35,7 @@
 
 <script>
 import { createKeychain, getKeychain, updateKeychain } from '../services/api.js'
+import deleteIcon from '../assets/delete.svg'
 
 export default {
   data() {
@@ -43,7 +46,8 @@ export default {
       isSaving: false,
       errorMsg: '',
       maxChars: 600,
-      code: null
+      code: null,
+      deleteIcon
     }
   },
 
@@ -169,9 +173,17 @@ export default {
   border-radius: 50%;
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  font-size: 12px;
   width: 22px;
   height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.delete-btn img {
+  width: 12px;
+  height: 12px;
 }
 
 .text-area-container {

@@ -6,14 +6,18 @@
 
       <div class="base"></div>
 
-      <div class="letter" v-if="isOpen">
+      <div class="letter" v-if="isOpen" ref="letterEl">
         <p class="message-text">{{ message }}</p>
       </div>
 
-      <div class="photos" v-if="isOpen">
-        <div 
-          v-for="(photo, index) in finalPhotos" 
-          :key="index" 
+      <div
+        class="photos"
+        v-if="isOpen && photos.length"
+        :style="{ transform: `translateY(${photosOffset}px)` }"
+      >
+        <div
+          v-for="(photo, index) in photos"
+          :key="index"
           class="photo"
           :style="{ animationDelay: (0.2 + index * 0.2) + 's' }"
         >
@@ -35,8 +39,10 @@ export default {
   data() {
     return {
       isOpen: false,
-      message: 'Ich denke an dich 💖',
-      photos: []
+      message: '',
+      photos: [],
+      photosOffset: 0,
+      resizeObserver: null
     }
   },
 
@@ -51,20 +57,40 @@ export default {
     }
   },
 
-  methods: {
-    toggleOpen() { this.isOpen = !this.isOpen }
+  beforeUnmount() {
+    if (this.resizeObserver) this.resizeObserver.disconnect()
   },
 
-  computed: {
-    finalPhotos() {
-      if (this.photos.length > 0) return this.photos
-      return [
-        'https://picsum.photos/100?1',
-        'https://picsum.photos/100?2',
-        'https://picsum.photos/100?3'
-      ]
+  watch: {
+    isOpen(newVal) {
+      if (newVal) {
+        this.$nextTick(() => this.observeLetter())
+      } else if (this.resizeObserver) {
+        this.resizeObserver.disconnect()
+      }
     }
-  }
+  },
+
+  methods: {
+    toggleOpen() { this.isOpen = !this.isOpen },
+
+    observeLetter() {
+      const el = this.$refs.letterEl
+      if (!el) return
+
+      const BASE_LETTER_HEIGHT = 176 // 80% der Envelope-Höhe (220px)
+
+      const updateOffset = () => {
+        this.photosOffset = Math.max(0, el.offsetHeight - BASE_LETTER_HEIGHT)
+      }
+
+      updateOffset()
+
+      if (this.resizeObserver) this.resizeObserver.disconnect()
+      this.resizeObserver = new ResizeObserver(updateOffset)
+      this.resizeObserver.observe(el)
+    }
+  },
 }
 </script>
 
@@ -86,6 +112,9 @@ export default {
   font-size: 14px;
   text-align: left;
   color: #444;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  margin: 0;
 }
 
 /* Container */
@@ -111,12 +140,14 @@ export default {
 .letter {
   position: absolute;
   width: 90%;
-  height: 80%;
+  min-height: 80%;
+  height: auto;
   top: 10%;
   left: 5%;
   background: white;
   border-radius: 4px;
   padding: 15px;
+  box-sizing: border-box;
   box-shadow: 0 10px 25px rgba(0,0,0,0.2);
   z-index: 2;
   animation: slideUp 0.6s ease;
@@ -161,6 +192,7 @@ export default {
   left: 0;
   z-index: 4;
   pointer-events: none;
+  transition: transform 0.3s ease;
 }
 
 .photo {
