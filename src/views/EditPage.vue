@@ -1,41 +1,83 @@
 <template>
-  <div class="message-editor-container">
-    <h3>Nachricht bearbeiten</h3>
-    <div class="text-area-container">
-      <textarea v-model="message" rows="5" style="width:100%" :maxlength="maxChars" />
-      <p>{{ message.length }} / {{ maxChars }} Zeichen</p>
-    </div>
-  </div>
+  <div class="edit-page">
+    <header class="edit-page__header">
+      <img :src="logo" alt="Logo" class="edit-page__logo" />
+    </header>
 
-  <div class="message-editor-container">
-    <h3>Bilder hinzufügen</h3>
-    <p>Maximal 3 Bilder möglich ({{ images.length }}/3)</p>
-    <input type="file" multiple accept="image/*" @change="handleImages" :disabled="images.length >= 3" />
-    <p v-if="isLoadingImages">Bilder werden verarbeitet...</p>
-    <div v-if="images.length" class="preview">
-      <div v-for="(img, index) in images" :key="index" class="preview-img">
-        <img :src="img" />
-        <button class="delete-btn" @click="removeImage(index)">
-          <img :src="deleteIcon" alt="Löschen" />
+    <div class="letter">
+      <section class="letter__section">
+        <p class="eyebrow">01 — Nachricht</p>
+        <h3 class="letter__heading">Was möchtest du sagen?</h3>
+        <textarea
+          v-model="message"
+          rows="6"
+          class="letter__textarea"
+          :maxlength="maxChars"
+          placeholder="Schreib deine Worte…"
+        />
+        <p class="meta-text" :class="{ 'meta-text--warn': message.length >= maxChars * 0.9 }">
+          {{ message.length }} / {{ maxChars }} Zeichen
+        </p>
+      </section>
+
+      <div class="divider" aria-hidden="true"></div>
+
+      <section class="letter__section">
+        <p class="eyebrow">02 — Fotos</p>
+        <h3 class="letter__heading">Erinnerungen beilegen</h3>
+        <p class="meta-text">{{ images.length }} / 3 Fotos</p>
+
+        <label class="dropzone" :class="{ 'dropzone--disabled': images.length >= 3 }">
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            @change="handleImages"
+            :disabled="images.length >= 3"
+          />
+          <span class="dropzone__plus">+</span>
+          <span class="dropzone__label">
+            {{ images.length >= 3 ? 'Maximum erreicht' : 'Fotos auswählen' }}
+          </span>
+        </label>
+
+        <p v-if="isLoadingImages" class="meta-text meta-text--loading">Bilder werden verarbeitet…</p>
+
+        <div v-if="images.length" class="polaroids">
+          <div
+            v-for="(img, index) in images"
+            :key="index"
+            class="polaroid"
+            :style="{ '--tilt': tiltFor(index) }"
+          >
+            <span class="polaroid__tape"></span>
+            <img :src="img" />
+            <button class="polaroid__delete" @click="removeImage(index)" aria-label="Bild löschen">
+              <img :src="deleteIcon" alt="" />
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="actions-bar">
+      <p v-if="errorMsg" class="error-note">{{ errorMsg }}</p>
+      <div class="actions-bar__row">
+        <button class="btn btn--primary" @click="save" :disabled="isLoadingImages || isSaving">
+          {{ isSaving ? 'Wird gespeichert…' : isLoadingImages ? 'Lade Bilder…' : 'Speichern' }}
         </button>
+        <router-link :to="`/${code}`">
+          <button class="btn btn--ghost">Zurück</button>
+        </router-link>
       </div>
     </div>
-  </div>
-
-  <div class="controlls-container">
-    <p v-if="errorMsg" style="color:red">{{ errorMsg }}</p>
-    <button @click="save" :disabled="isLoadingImages || isSaving">
-      {{ isSaving ? 'Wird gespeichert...' : isLoadingImages ? 'Lade Bilder...' : 'Speichern' }}
-    </button>
-    <router-link :to="`/${code}`">
-      <button>Zurück</button>
-    </router-link>
   </div>
 </template>
 
 <script>
 import { createKeychain, getKeychain, updateKeychain } from '../services/api.js'
 import deleteIcon from '../assets/delete.svg'
+import logo from '../assets/logo.png'
 
 export default {
   data() {
@@ -47,7 +89,8 @@ export default {
       errorMsg: '',
       maxChars: 600,
       code: null,
-      deleteIcon
+      deleteIcon,
+      logo
     }
   },
 
@@ -75,6 +118,11 @@ export default {
   },
 
   methods: {
+    tiltFor(index) {
+      const tilts = ['-4deg', '3deg', '-2deg']
+      return tilts[index % tilts.length]
+    },
+
     async handleImages(event) {
       const files = Array.from(event.target.files)
       if (!files.length) return
@@ -142,59 +190,348 @@ export default {
 }
 </script>
 
-<style>
-.preview {
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Space+Mono:wght@400;700&display=swap');
+
+.edit-page {
+  --paper: #f6efe4;
+  --card: #fffbf3;
+  --ink: #2b241d;
+  --ink-soft: #8a7f6f;
+  --accent: #b8465a;
+  --accent-soft: #f4dde1;
+  --line: #ddd2bd;
+
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 28px 20px 60px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.edit-page__header {
   display: flex;
-  gap: 10px;
-  margin-top: 10px;
-  flex-wrap: wrap;
-  margin-left: 15%;
-  margin-right: 15%;
+  justify-content: center;
+  padding: 4px 0 32px;
 }
 
-.preview-img img {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 6px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+.edit-page__logo {
+  height: 44px;
+  width: auto;
 }
 
-.preview-img {
+/* --- Letter card --- */
+
+.letter {
   position: relative;
+  max-width: 560px;
+  margin: 0 auto;
+  background: var(--card);
+  padding: 40px 32px 32px;
+  box-shadow: 0 24px 48px rgba(43, 36, 29, 0.1), 0 2px 8px rgba(43, 36, 29, 0.06);
 }
 
-.delete-btn {
+.letter::before {
+  content: '';
   position: absolute;
-  top: -5px;
-  right: -5px;
-  border: none;
+  top: -11px;
+  left: 0;
+  right: 0;
+  height: 12px;
+  background-image:
+    linear-gradient(135deg, var(--card) 50%, transparent 50%),
+    linear-gradient(-135deg, var(--card) 50%, transparent 50%);
+  background-size: 16px 16px;
+  background-position: bottom left, bottom right;
+  background-repeat: repeat-x;
+}
+
+.letter__section {
+  display: flex;
+  flex-direction: column;
+}
+
+.eyebrow {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 8px;
+}
+
+.letter__heading {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  font-size: 1.35rem;
+  margin: 0 0 18px;
+  color: var(--ink);
+}
+
+.letter__textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 168px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 14px 16px 6px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1rem;
+  line-height: 28px;
+  color: var(--ink);
+  background-color: var(--card);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.letter__textarea:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.letter__textarea::placeholder {
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.meta-text {
+  align-self: flex-end;
+  margin: 8px 2px 0;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.meta-text--warn {
+  color: var(--accent);
+}
+
+.meta-text--loading {
+  align-self: flex-start;
+  margin-top: 12px;
+}
+
+.divider {
+  border-top: 1px dashed var(--line);
+  margin: 32px 0 28px;
+}
+
+/* --- Dropzone --- */
+
+.dropzone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1.5px dashed var(--line);
+  border-radius: 3px;
+  padding: 16px;
+  margin-top: 4px;
+  cursor: pointer;
+  background: var(--paper);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.dropzone:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.dropzone--disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.dropzone--disabled:hover {
+  border-color: var(--line);
+  background: var(--paper);
+}
+
+.dropzone input[type='file'] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.dropzone__plus {
+  font-family: 'Space Mono', monospace;
+  font-size: 1.2rem;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.dropzone__label {
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+}
+
+/* --- Polaroids --- */
+
+.polaroids {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+  padding: 6px 4px 14px;
+}
+
+.polaroid {
+  position: relative;
+  width: 108px;
+  background: #fff;
+  padding: 8px 8px 22px;
+  box-shadow: 0 10px 18px rgba(43, 36, 29, 0.18);
+  transform: rotate(var(--tilt));
+  transition: transform 0.2s ease;
+}
+
+.polaroid:hover {
+  transform: rotate(0deg) scale(1.05);
+  z-index: 1;
+}
+
+.polaroid img {
+  display: block;
+  width: 100%;
+  height: 96px;
+  object-fit: cover;
+}
+
+.polaroid__tape {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  width: 42px;
+  height: 16px;
+  background: rgba(244, 221, 225, 0.85);
+  border: 1px solid rgba(184, 70, 90, 0.15);
+  transform: translateX(-50%) rotate(-3deg);
+}
+
+.polaroid__delete {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  border: 1px solid var(--line);
   background: white;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   width: 22px;
   height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
+  transition: transform 0.1s ease;
 }
 
-.delete-btn img {
-  width: 12px;
-  height: 12px;
+.polaroid__delete:hover {
+  transform: scale(1.08);
+  border-color: var(--accent);
 }
 
-.text-area-container {
-  margin-left: 15%;
-  margin-right: 15%;
+.polaroid__delete img {
+  width: 11px;
+  height: 11px;
 }
 
-.controlls-container {
-  margin-top: 20px;
-  border: 1px solid var(--border);
-  padding: 10px;
+/* --- Actions --- */
+
+.actions-bar {
+  max-width: 560px;
+  margin: 28px auto 0;
 }
 
+.error-note {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 3px;
+  padding: 10px 14px;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.8rem;
+  margin: 0 0 14px;
+}
+
+.actions-bar__row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  font-family: 'Space Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  border-radius: 3px;
+  padding: 14px 26px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease, box-shadow 0.05s ease;
+}
+
+.btn--primary {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 4px 0 rgba(43, 36, 29, 0.18);
+}
+
+.btn--primary:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.btn--primary:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(43, 36, 29, 0.18);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+.btn--ghost:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+@media (max-width: 480px) {
+  .edit-page {
+    padding: 20px 14px 44px;
+  }
+
+  .letter {
+    padding: 32px 20px 24px;
+    margin: 0;
+  }
+
+  .actions-bar__row {
+    flex-direction: column;
+  }
+
+  .actions-bar__row .btn,
+  .actions-bar__row router-link {
+    width: 100%;
+  }
+
+  .polaroid {
+    width: 92px;
+  }
+}
 </style>
