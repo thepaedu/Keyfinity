@@ -44,18 +44,13 @@
         <p v-if="isLoadingImages" class="meta-text meta-text--loading">Bilder werden verarbeitet…</p>
 
         <div v-if="images.length" class="polaroids">
-          <div
+          <PolaroidPhoto
             v-for="(img, index) in images"
             :key="index"
-            class="polaroid"
-            :style="{ '--tilt': tiltFor(index) }"
-          >
-            <span class="polaroid__tape"></span>
-            <img :src="img" />
-            <button class="polaroid__delete" @click="removeImage(index)" aria-label="Bild löschen">
-              <img :src="deleteIcon" alt="" />
-            </button>
-          </div>
+            :src="img"
+            :tilt="tiltFor(index)"
+            @delete="removeImage(index)"
+          />
         </div>
       </section>
     </div>
@@ -78,8 +73,14 @@
 import { createKeychain, getKeychain, updateKeychain } from '../services/api.js'
 import deleteIcon from '../assets/delete.svg'
 import logo from '../assets/logo.png'
+import PolaroidPhoto from '../components/PolaroidPhoto.vue'
 
 export default {
+
+  components: {
+  PolaroidPhoto
+  },
+
   data() {
     return {
       message: '',
@@ -367,77 +368,6 @@ export default {
 .dropzone__label {
   font-size: 0.9rem;
   color: var(--ink-soft);
-}
-
-/* --- Polaroids --- */
-
-.polaroids {
-  display: flex;
-  gap: 22px;
-  flex-wrap: wrap;
-  margin-top: 22px;
-  padding: 6px 4px 14px;
-}
-
-.polaroid {
-  position: relative;
-  width: 108px;
-  background: #fff;
-  padding: 8px 8px 22px;
-  box-shadow: 0 10px 18px rgba(43, 36, 29, 0.18);
-  transform: rotate(var(--tilt));
-  transition: transform 0.2s ease;
-}
-
-.polaroid:hover {
-  transform: rotate(0deg) scale(1.05);
-  z-index: 1;
-}
-
-.polaroid img {
-  display: block;
-  width: 100%;
-  height: 96px;
-  object-fit: cover;
-}
-
-.polaroid__tape {
-  position: absolute;
-  top: -9px;
-  left: 50%;
-  width: 42px;
-  height: 16px;
-  background: rgba(244, 221, 225, 0.85);
-  border: 1px solid rgba(184, 70, 90, 0.15);
-  transform: translateX(-50%) rotate(-3deg);
-}
-
-.polaroid__delete {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  border: 1px solid var(--line);
-  background: white;
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  width: 22px;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  transition: transform 0.1s ease;
-}
-
-.polaroid__delete:hover {
-  transform: scale(1.08);
-  border-color: var(--accent);
-}
-
-.polaroid__delete img {
-  width: 11px;
-  height: 11px;
 }
 
 /* --- Actions --- */

@@ -22,7 +22,11 @@
           :style="{ animationDelay: (0.2 + index * 0.2) + 's' }"
         >
           <div class="photo-inner" @click.stop="toggleEnlarge(index)">
-            <img :src="photo" />
+            <PolaroidPhoto
+              :src="photo"
+              :tilt="['-4deg', '3deg', '-2deg'][index % 3]"
+              :show-delete="false"
+            />
           </div>
         </div>
       </div>
@@ -40,7 +44,11 @@
           @click="closeEnlarge"
         >
           <div class="lightbox-card" @click.stop>
-            <img :src="photos[enlargedIndex]" />
+            <PolaroidPhoto
+              :src="photos[enlargedIndex]"
+              size="lg"
+              :show-delete="false"
+            />
           </div>
         </div>
       </transition>
@@ -50,8 +58,13 @@
 
 <script>
 import { getKeychain } from '../services/api.js'
+import PolaroidPhoto from '../components/PolaroidPhoto.vue'
 
 export default {
+  components: {
+    PolaroidPhoto
+  },
+
   data() {
     return {
       isOpen: false,
@@ -223,40 +236,14 @@ export default {
 
 .photo {
   position: absolute;
-  width: 90px;
-  height: 110px;
   opacity: 0;
   transform: translateY(40px) scale(0.8);
   pointer-events: auto;
 }
 
 .photo-inner {
-  width: 100%;
-  height: 100%;
-  background: white;
-  padding: 6px;
-  box-sizing: border-box;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-  border-radius: 4px;
   cursor: pointer;
   transform-origin: center center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* Kleines Hover-Feedback am Desktop, die eigentliche Vergrösserung passiert in der Lightbox */
-@media (hover: hover) {
-  .photo-inner:hover {
-    transform: scale(1.05);
-    box-shadow: 0 12px 25px rgba(0,0,0,0.3);
-  }
-}
-
-/* Bild drin */
-.photo img {
-  width: 100%;
-  height: 80%;
-  object-fit: cover;
-  border-radius: 2px;
 }
 
 .photo:nth-child(1) {
@@ -322,9 +309,8 @@ export default {
     padding: 10px;
   }
 
-  .photo {
-    width: 70px;
-    height: 90px;
+  .photo-inner {
+    transform: scale(0.75);
   }
 
   .photo:nth-child(1) {
@@ -357,21 +343,7 @@ export default {
 }
 
 .lightbox-card {
-  background: white;
-  padding: 14px 14px 22px;
-  border-radius: 6px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-  max-width: min(90vw, 420px);
-  width: 100%;
   animation: popIn 0.25s ease;
-}
-
-.lightbox-card img {
-  display: block;
-  width: 100%;
-  max-height: 75vh;
-  object-fit: contain;
-  border-radius: 3px;
 }
 
 @keyframes popIn {
