@@ -171,7 +171,6 @@ export default {
   width: 100%;
   height: 100%;
   background: #e0c097;
-  border-radius: 6px;
   z-index: 1;
 }
 
@@ -184,7 +183,6 @@ export default {
   top: 10%;
   left: 5%;
   background: white;
-  border-radius: 4px;
   padding: 15px;
   box-sizing: border-box;
   box-shadow: 0 10px 25px rgba(0,0,0,0.2);
